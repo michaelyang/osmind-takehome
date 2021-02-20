@@ -1,25 +1,27 @@
-import React, { useRef, useState, useEffect } from "react";
-import Form from "react-bootstrap/Form";
-import { API, Storage } from "aws-amplify";
-import { useParams, useHistory } from "react-router-dom";
-import LoaderButton from "../components/LoaderButton";
-import { onError } from "../libs/errorLib";
-import { s3Upload } from "../libs/awsLib";
-import config from "../config";
-import "./Notes.css";
+import React, { useRef, useState, useEffect } from 'react';
+import Form from 'react-bootstrap/Form';
+import { API, Storage } from 'aws-amplify';
+import { useParams, useHistory } from 'react-router-dom';
+import LoaderButton from '../components/LoaderButton';
+import { onError } from '../libs/errorLib';
+import { s3Upload } from '../libs/awsLib';
+import config from '../config';
+import './Notes.css';
+import Loading from '../components/common/Loading';
 
 export default function Notes() {
   const file = useRef(null);
   const { id } = useParams();
   const history = useHistory();
   const [note, setNote] = useState(null);
-  const [content, setContent] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [content, setContent] = useState('');
+  const [isNoteLoading, setIsNoteLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     function loadNote() {
-      return API.get("notes", `/notes/${id}`);
+      return API.get('notes', `/notes/${id}`);
     }
 
     async function onLoad() {
@@ -36,6 +38,8 @@ export default function Notes() {
       } catch (e) {
         onError(e);
       }
+
+      setIsNoteLoading(false);
     }
 
     onLoad();
@@ -46,7 +50,7 @@ export default function Notes() {
   }
 
   function formatFilename(str) {
-    return str.replace(/^\w+-/, "");
+    return str.replace(/^\w+-/, '');
   }
 
   function handleFileChange(event) {
@@ -54,8 +58,8 @@ export default function Notes() {
   }
 
   function saveNote(note) {
-    return API.put("notes", `/notes/${id}`, {
-      body: note
+    return API.put('notes', `/notes/${id}`, {
+      body: note,
     });
   }
 
@@ -65,15 +69,11 @@ export default function Notes() {
     event.preventDefault();
 
     if (file.current && file.current.size > config.MAX_ATTACHMENT_SIZE) {
-      alert(
-        `Please pick a file smaller than ${
-          config.MAX_ATTACHMENT_SIZE / 1000000
-        } MB.`
-      );
+      alert(`Please pick a file smaller than ${config.MAX_ATTACHMENT_SIZE / 1000000} MB.`);
       return;
     }
 
-    setIsLoading(true);
+    setIsSaving(true);
 
     try {
       if (file.current) {
@@ -82,25 +82,23 @@ export default function Notes() {
 
       await saveNote({
         content,
-        attachment: attachment || note.attachment
+        attachment: attachment || note.attachment,
       });
-      history.push("/");
+      history.push('/');
     } catch (e) {
       onError(e);
-      setIsLoading(false);
+      setIsSaving(false);
     }
   }
 
   function deleteNote() {
-    return API.del("notes", `/notes/${id}`);
+    return API.del('notes', `/notes/${id}`);
   }
 
   async function handleDelete(event) {
     event.preventDefault();
 
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this note?"
-    );
+    const confirmed = window.confirm('Are you sure you want to delete this note?');
 
     if (!confirmed) {
       return;
@@ -110,14 +108,16 @@ export default function Notes() {
 
     try {
       await deleteNote();
-      history.push("/");
+      history.push('/');
     } catch (e) {
       onError(e);
       setIsDeleting(false);
     }
   }
 
-  return (
+  return isNoteLoading ? (
+    <Loading text="Loading Note..." />
+  ) : (
     <div className="Notes">
       {note && (
         <Form onSubmit={handleSubmit}>
@@ -132,11 +132,7 @@ export default function Notes() {
             <Form.Label>Attachment</Form.Label>
             {note.attachment && (
               <p>
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={note.attachmentURL}
-                >
+                <a target="_blank" rel="noopener noreferrer" href={note.attachmentURL}>
                   {formatFilename(note.attachment)}
                 </a>
               </p>
@@ -147,7 +143,7 @@ export default function Notes() {
             block
             size="lg"
             type="submit"
-            isLoading={isLoading}
+            isLoading={isSaving}
             disabled={!validateForm()}
           >
             Save
