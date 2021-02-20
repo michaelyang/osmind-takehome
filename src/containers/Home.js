@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { API } from "aws-amplify";
-import { Link } from "react-router-dom";
-import { BsPencilSquare } from "react-icons/bs";
-import ListGroup from "react-bootstrap/ListGroup";
-import { LinkContainer } from "react-router-bootstrap";
-import { useAppContext } from "../libs/contextLib";
-import { onError } from "../libs/errorLib";
-import "./Home.css";
+import React, { useState, useEffect } from 'react';
+import { API } from 'aws-amplify';
+import { Link } from 'react-router-dom';
+import { BsPencilSquare } from 'react-icons/bs';
+import ListGroup from 'react-bootstrap/ListGroup';
+import { LinkContainer } from 'react-router-bootstrap';
+import { useAppContext } from '../libs/contextLib';
+import { onError } from '../libs/errorLib';
+import './Home.css';
+import Loading from '../components/common/Loading';
 
 export default function Home() {
   const [notes, setNotes] = useState([]);
@@ -33,7 +34,7 @@ export default function Home() {
   }, [isAuthenticated]);
 
   function loadNotes() {
-    return API.get("notes", "/notes");
+    return API.get('notes', '/notes');
   }
 
   function renderNotesList(notes) {
@@ -48,13 +49,9 @@ export default function Home() {
         {notes.map(({ noteId, content, createdAt }) => (
           <LinkContainer key={noteId} to={`/notes/${noteId}`}>
             <ListGroup.Item action>
-              <span className="font-weight-bold">
-                {content.trim().split("\n")[0]}
-              </span>
+              <span className="font-weight-bold">{content.trim().split('\n')[0]}</span>
               <br />
-              <span className="text-muted">
-                Created: {new Date(createdAt).toLocaleString()}
-              </span>
+              <span className="text-muted">Created: {new Date(createdAt).toLocaleString()}</span>
             </ListGroup.Item>
           </LinkContainer>
         ))}
@@ -83,14 +80,14 @@ export default function Home() {
     return (
       <div className="notes">
         <h2 className="pb-3 mt-4 mb-3 border-bottom">Your Notes</h2>
-        <ListGroup>{!isLoading && renderNotesList(notes)}</ListGroup>
+        {isLoading ? (
+          <Loading text="Loading Your Notes..." />
+        ) : (
+          <ListGroup>{renderNotesList(notes)}</ListGroup>
+        )}
       </div>
     );
   }
-  
-  return (
-    <div className="Home">
-      {isAuthenticated ? renderNotes() : renderLander()}
-    </div>
-  );
+
+  return <div className="Home">{isAuthenticated ? renderNotes() : renderLander()}</div>;
 }
