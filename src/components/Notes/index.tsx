@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import Button from 'react-bootstrap/Button';
+import LoaderButton from '../../components/LoaderButton';
 import ListGroup from 'react-bootstrap/ListGroup';
+import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
@@ -8,13 +9,16 @@ import FormControl from 'react-bootstrap/FormControl';
 import Collapse from 'react-bootstrap/Collapse';
 import Loading from '../common/Loading';
 import NotesList from './NotesList';
-import { filterNotes } from '../../utils/searchFunctions';
+import { filterNotes, replaceContent } from '../../utils/searchFunctions';
 import { LinkContainer } from 'react-router-bootstrap';
 import { BsPencilSquare } from 'react-icons/bs';
 import saveNote from '../../libs/notes/saveNotes';
+import { onError } from '../../libs/errorLib';
+
 export interface NotesProps {
   notes: INote[];
   isLoading: boolean;
+  setNeedsRefetch: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 enum ActionType {
@@ -27,7 +31,7 @@ const ActionName = new Map<ActionType, string>([
   [ActionType.FindAndReplace, 'Find & Replace'],
 ]);
 
-const Notes: React.FC<NotesProps> = ({ notes, isLoading }) => {
+const Notes: React.FC<NotesProps> = ({ notes, isLoading, setNeedsRefetch }) => {
   const [findTerm, setFindTerm] = useState<string>('');
   const [replaceWith, setReplaceWith] = useState<string>('');
   const [isReplacing, setIsReplacing] = useState<boolean>(false);
@@ -43,59 +47,74 @@ const Notes: React.FC<NotesProps> = ({ notes, isLoading }) => {
 
   const filteredNotes = filterNotes(notes, findTerm);
 
-  /*
-  const handleReplaceSubmit = async (event) => {
-    event.preventDefault();
+  const handleReplaceSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
     setIsReplacing(true);
     try {
-      return;
+      await filteredNotes.map((note) => {
+        const replacedContent = replaceContent(note.content, findTerm, replaceWith);
+        saveNote({
+          ...note,
+          content: replacedContent,
+        });
+      });
     } catch (e) {
-      return;
+      onError(e);
     }
+    setNeedsRefetch(true);
+    setIsReplacing(false);
   };
-*/
 
   return (
     <div className="notes">
       <h2 className="pb-3 mt-4 mb-3 border-bottom">Your Notes</h2>
       <div className="search-container pb-3 mb-3 border-bottom">
-        <InputGroup>
-          <FormControl
-            type="text"
-            placeholder="Find"
-            value={findTerm}
-            onChange={handleFindInputChange}
-            tabIndex={2}
-          />
-          <DropdownButton
-            as={InputGroup.Prepend}
-            variant="secondary"
-            title={ActionName.get(actionType)}
-            tabIndex={1}
-          >
-            <Dropdown.Item onClick={() => setActionType(ActionType.Find)}>
-              {ActionName.get(ActionType.Find)}
-            </Dropdown.Item>
-            <Dropdown.Item onClick={() => setActionType(ActionType.FindAndReplace)}>
-              {ActionName.get(ActionType.FindAndReplace)}
-            </Dropdown.Item>
-          </DropdownButton>
-        </InputGroup>
-        <Collapse in={actionType === ActionType.FindAndReplace}>
-          <InputGroup className="mt-2">
-            <FormControl type="text" placeholder="Replace with..." tabIndex={3} />
-            <InputGroup.Append>
-              <Button
-                variant="primary"
+        <Form onSubmit={handleReplaceSubmit} className="w-100">
+          <InputGroup>
+            <FormControl
+              type="text"
+              placeholder="Find"
+              value={findTerm}
+              onChange={handleFindInputChange}
+              tabIndex={2}
+            />
+            <DropdownButton
+              as={InputGroup.Prepend}
+              variant="secondary"
+              title={ActionName.get(actionType)}
+              tabIndex={1}
+            >
+              <Dropdown.Item onClick={() => setActionType(ActionType.Find)}>
+                {ActionName.get(ActionType.Find)}
+              </Dropdown.Item>
+              <Dropdown.Item onClick={() => setActionType(ActionType.FindAndReplace)}>
+                {ActionName.get(ActionType.FindAndReplace)}
+              </Dropdown.Item>
+            </DropdownButton>
+          </InputGroup>
+          <Collapse in={actionType === ActionType.FindAndReplace}>
+            <InputGroup className="mt-2">
+              <FormControl
+                type="text"
+                placeholder="Replace with..."
+                tabIndex={3}
                 value={replaceWith}
                 onChange={handleReplceInputChange}
-                tabIndex={4}
-              >
-                Replace
-              </Button>
-            </InputGroup.Append>
-          </InputGroup>
-        </Collapse>
+              />
+              <InputGroup.Append>
+                <LoaderButton
+                  type="submit"
+                  variant="primary"
+                  tabIndex={4}
+                  disabled={actionType !== ActionType.FindAndReplace}
+                  isLoading={isReplacing}
+                >
+                  Replace
+                </LoaderButton>
+              </InputGroup.Append>
+            </InputGroup>
+          </Collapse>
+        </Form>
       </div>
       <ListGroup>
         <LinkContainer to="/notes/new">

@@ -17,11 +17,11 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   return (
     <span className="font-weight-bold">
       {parts.map((part, i) => {
-        const partToCompate = isCaseSensitive ? part : part.toLocaleLowerCase();
+        const partToCompare = isCaseSensitive ? part : part.toLocaleLowerCase();
         const highlightedTermToCompare = isCaseSensitive
           ? highlightedTerm
           : highlightedTerm.toLocaleLowerCase();
-        return partToCompate === highlightedTermToCompare ? (
+        return partToCompare === highlightedTermToCompare ? (
           <mark key={i} style={{ padding: 0 }}>
             {part}
           </mark>

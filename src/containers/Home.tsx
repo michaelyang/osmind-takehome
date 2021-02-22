@@ -25,6 +25,7 @@ const Home: React.FC = () => {
   const [notes, setNotes] = useState<INote[]>([]);
   const { isAuthenticated } = useAppContext();
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [needsRefetch, setNeedsRefetch] = useState<boolean>(false);
 
   useEffect(() => {
     async function onLoad() {
@@ -38,12 +39,12 @@ const Home: React.FC = () => {
       } catch (e) {
         onError(e);
       }
-
+      setNeedsRefetch(false);
       setIsLoading(false);
     }
 
     onLoad();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, needsRefetch]);
 
   function loadNotes() {
     return API.get('notes', '/notes', {});
@@ -51,7 +52,11 @@ const Home: React.FC = () => {
 
   return (
     <div className="Home">
-      {isAuthenticated ? <Notes notes={notes} isLoading={isLoading} /> : <Lander />}
+      {isAuthenticated ? (
+        <Notes notes={notes} isLoading={isLoading} setNeedsRefetch={setNeedsRefetch} />
+      ) : (
+        <Lander />
+      )}
     </div>
   );
 };
