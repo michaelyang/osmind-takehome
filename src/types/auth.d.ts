@@ -1,0 +1,3 @@
+interface IAuth {
+  isAuthenticated: boolean;
+}
