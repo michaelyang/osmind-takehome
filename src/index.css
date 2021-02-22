@@ -5,18 +5,33 @@ body {
   font-size: 16px;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
 }
-h1, h2, h3, h4, h5, h6 {
-  font-family: "PT Serif", serif;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'PT Serif', serif;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: "PT Serif", serif;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'PT Serif', serif;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: "PT Serif", serif;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'PT Serif', serif;
 }
 
 select.form-control,
@@ -24,6 +39,11 @@ textarea.form-control,
 input.form-control {
   font-size: 1rem;
 }
-input[type=file] {
+input[type='file'] {
   width: 100%;
+}
+
+mark {
+  background-color: #ff8871;
+  color: #495073;
 }
