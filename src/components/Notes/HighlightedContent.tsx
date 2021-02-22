@@ -1,29 +1,34 @@
 import React from 'react';
-
+import { splitContent } from '../../utils/searchFunctions';
 export interface HighlightedTextProps {
   content: string;
   highlightedTerm?: string;
+  isCaseSensitive?: boolean;
 }
 
-const HighlightedText: React.FC<HighlightedTextProps> = ({ content, highlightedTerm = '' }) => {
-  // TODO: Fix bug where doesn't highlight case sensitive stuff. Maybe make the function flexible.
-  if (!highlightedTerm) {
-    return <span className="font-weight-bold">{content.trim().split('\n')[0]}</span>;
-  }
-
-  const parts = content.split(new RegExp(`(${highlightedTerm})`, 'gi'));
+const HighlightedText: React.FC<HighlightedTextProps> = ({
+  content,
+  highlightedTerm = '',
+  isCaseSensitive = false,
+}) => {
+  const trimmedContent = content.trim().split('\n')[0];
+  const parts = splitContent(trimmedContent, highlightedTerm);
 
   return (
     <span className="font-weight-bold">
-      {parts.map((part, i) =>
-        part === highlightedTerm ? (
+      {parts.map((part, i) => {
+        const partToCompate = isCaseSensitive ? part : part.toLocaleLowerCase();
+        const highlightedTermToCompare = isCaseSensitive
+          ? highlightedTerm
+          : highlightedTerm.toLocaleLowerCase();
+        return partToCompate === highlightedTermToCompare ? (
           <mark key={i} style={{ padding: 0 }}>
             {part}
           </mark>
         ) : (
           part
-        )
-      )}
+        );
+      })}
     </span>
   );
 };

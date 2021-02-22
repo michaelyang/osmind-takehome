@@ -11,7 +11,7 @@ import NotesList from './NotesList';
 import { filterNotes } from '../../utils/searchFunctions';
 import { LinkContainer } from 'react-router-bootstrap';
 import { BsPencilSquare } from 'react-icons/bs';
-
+import saveNote from '../../libs/notes/saveNotes';
 export interface NotesProps {
   notes: INote[];
   isLoading: boolean;
@@ -30,6 +30,7 @@ const ActionName = new Map<ActionType, string>([
 const Notes: React.FC<NotesProps> = ({ notes, isLoading }) => {
   const [findTerm, setFindTerm] = useState<string>('');
   const [replaceWith, setReplaceWith] = useState<string>('');
+  const [isReplacing, setIsReplacing] = useState<boolean>(false);
   const [actionType, setActionType] = useState<ActionType>(ActionType.Find);
 
   const handleFindInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,6 +42,18 @@ const Notes: React.FC<NotesProps> = ({ notes, isLoading }) => {
   };
 
   const filteredNotes = filterNotes(notes, findTerm);
+
+  /*
+  const handleReplaceSubmit = async (event) => {
+    event.preventDefault();
+    setIsReplacing(true);
+    try {
+      return;
+    } catch (e) {
+      return;
+    }
+  };
+*/
 
   return (
     <div className="notes">
