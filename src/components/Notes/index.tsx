@@ -18,7 +18,7 @@ import { onError } from '../../libs/errorLib';
 export interface NotesProps {
   notes: INote[];
   isLoading: boolean;
-  setNeedsRefetch: React.Dispatch<React.SetStateAction<boolean>>;
+  refetchNotes: () => void;
 }
 
 enum ActionType {
@@ -31,10 +31,11 @@ const ActionName = new Map<ActionType, string>([
   [ActionType.FindAndReplace, 'Find & Replace'],
 ]);
 
-const Notes: React.FC<NotesProps> = ({ notes, isLoading, setNeedsRefetch }) => {
+const Notes: React.FC<NotesProps> = ({ notes, isLoading, refetchNotes }) => {
   const [findTerm, setFindTerm] = useState<string>('');
-  const [replaceWith, setReplaceWith] = useState<string>('');
+  const [replaceTerm, setReplaceTerm] = useState<string>('');
   const [isReplacing, setIsReplacing] = useState<boolean>(false);
+  const [isCaseSensitive, setIsCaseSensitive] = useState<boolean>(false);
   const [actionType, setActionType] = useState<ActionType>(ActionType.Find);
 
   const handleFindInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,17 +43,26 @@ const Notes: React.FC<NotesProps> = ({ notes, isLoading, setNeedsRefetch }) => {
   };
 
   const handleReplceInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setReplaceWith(e.target.value);
+    setReplaceTerm(e.target.value);
   };
 
-  const filteredNotes = filterNotes(notes, findTerm);
+  const handleCaseSensitiveToggleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsCaseSensitive(e.target.checked);
+  };
+
+  const filteredNotes = filterNotes(notes, findTerm, isCaseSensitive);
 
   const handleReplaceSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setIsReplacing(true);
     try {
       await filteredNotes.map((note) => {
-        const replacedContent = replaceContent(note.content, findTerm, replaceWith);
+        const replacedContent = replaceContent(
+          note.content,
+          findTerm,
+          replaceTerm,
+          isCaseSensitive
+        );
         saveNote({
           ...note,
           content: replacedContent,
@@ -60,9 +70,10 @@ const Notes: React.FC<NotesProps> = ({ notes, isLoading, setNeedsRefetch }) => {
       });
     } catch (e) {
       onError(e);
+    } finally {
+      refetchNotes();
+      setIsReplacing(false);
     }
-    setNeedsRefetch(true);
-    setIsReplacing(false);
   };
 
   return (
@@ -70,6 +81,14 @@ const Notes: React.FC<NotesProps> = ({ notes, isLoading, setNeedsRefetch }) => {
       <h2 className="pb-3 mt-4 mb-3 border-bottom">Your Notes</h2>
       <div className="search-container pb-3 mb-3 border-bottom">
         <Form onSubmit={handleReplaceSubmit} className="w-100">
+          <Form.Check
+            type="switch"
+            id="case-sensitive"
+            label="Case sensitive"
+            className="text-right"
+            checked={isCaseSensitive}
+            onChange={handleCaseSensitiveToggleChange}
+          />
           <InputGroup>
             <FormControl
               type="text"
@@ -98,7 +117,7 @@ const Notes: React.FC<NotesProps> = ({ notes, isLoading, setNeedsRefetch }) => {
                 type="text"
                 placeholder="Replace with..."
                 tabIndex={3}
-                value={replaceWith}
+                value={replaceTerm}
                 onChange={handleReplceInputChange}
               />
               <InputGroup.Append>
@@ -125,8 +144,16 @@ const Notes: React.FC<NotesProps> = ({ notes, isLoading, setNeedsRefetch }) => {
         </LinkContainer>
         {isLoading ? (
           <Loading text="Loading Your Notes..." style={{ margin: '20px 0' }} />
+        ) : filteredNotes.length == 0 ? (
+          <ListGroup.Item action variant="light">
+            {`No Notes Found${findTerm && ` - Searching for "${findTerm}"`}`}
+          </ListGroup.Item>
         ) : (
-          <NotesList notes={filteredNotes} searchTerm={findTerm} />
+          <NotesList
+            notes={filteredNotes}
+            searchTerm={findTerm}
+            isCaseSensitive={isCaseSensitive}
+          />
         )}
       </ListGroup>
     </div>

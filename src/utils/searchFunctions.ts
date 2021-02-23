@@ -44,7 +44,7 @@ export const replaceContent = (
   replaceTerm: string,
   isCaseSensitive = false
 ): string => {
-  if (!searchTerm || !replaceTerm) {
+  if (!searchTerm) {
     return content;
   }
 

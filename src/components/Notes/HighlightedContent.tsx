@@ -11,7 +11,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   highlightedTerm = '',
   isCaseSensitive = false,
 }) => {
-  const trimmedContent = content.trim().split('\n')[0];
+  const trimmedContent = content.split('\n')[0];
   const parts = splitContent(trimmedContent, highlightedTerm);
 
   return (
@@ -22,7 +22,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
           ? highlightedTerm
           : highlightedTerm.toLocaleLowerCase();
         return partToCompare === highlightedTermToCompare ? (
-          <mark key={i} style={{ padding: 0 }}>
+          <mark key={i} style={{ padding: 0, whiteSpace: 'pre-wrap' }}>
             {part}
           </mark>
         ) : (

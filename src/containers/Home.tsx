@@ -53,7 +53,7 @@ const Home: React.FC = () => {
   return (
     <div className="Home">
       {isAuthenticated ? (
-        <Notes notes={notes} isLoading={isLoading} setNeedsRefetch={setNeedsRefetch} />
+        <Notes notes={notes} isLoading={isLoading} refetchNotes={() => setNeedsRefetch(true)} />
       ) : (
         <Lander />
       )}
