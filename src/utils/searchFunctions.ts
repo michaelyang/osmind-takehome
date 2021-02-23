@@ -8,7 +8,8 @@ export const splitContent = (
   content: string,
   splitTerm: string,
   isCaseSensitive = false
-): string[] => content.split(new RegExp(`(${splitTerm})`, isCaseSensitive ? 'g' : 'gi'));
+): string[] =>
+  splitTerm ? content.split(new RegExp(`(${splitTerm})`, isCaseSensitive ? 'g' : 'gi')) : [content];
 
 /**
  * Given an array of notes and a searchTerm, return an array of string that contains the search term
