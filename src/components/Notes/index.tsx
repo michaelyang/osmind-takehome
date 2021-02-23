@@ -56,18 +56,14 @@ const Notes: React.FC<NotesProps> = ({ notes, isLoading, refetchNotes }) => {
     e.preventDefault();
     setIsReplacing(true);
     try {
-      await filteredNotes.map((note) => {
-        const replacedContent = replaceContent(
-          note.content,
-          findTerm,
-          replaceTerm,
-          isCaseSensitive
-        );
-        saveNote({
-          ...note,
-          content: replacedContent,
-        });
-      });
+      await Promise.all(
+        filteredNotes.map((note) =>
+          saveNote({
+            ...note,
+            content: replaceContent(note.content, findTerm, replaceTerm, isCaseSensitive),
+          })
+        )
+      );
     } catch (e) {
       onError(e);
     } finally {
@@ -142,8 +138,11 @@ const Notes: React.FC<NotesProps> = ({ notes, isLoading, refetchNotes }) => {
             <span className="ml-2 font-weight-bold">Create a new note</span>
           </ListGroup.Item>
         </LinkContainer>
-        {isLoading ? (
-          <Loading text="Loading Your Notes..." style={{ margin: '20px 0' }} />
+        {isLoading || isReplacing ? (
+          <Loading
+            text={`${isLoading ? 'Loading' : 'Updating'} Your Notes...`}
+            style={{ margin: '20px 0' }}
+          />
         ) : filteredNotes.length == 0 ? (
           <ListGroup.Item action variant="light">
             {`No Notes Found${findTerm && ` - Searching for "${findTerm}"`}`}
